@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitLab Pipeline Trigger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Stronger shadow */
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 900px; /* Max width for larger screens */
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        input, select, button {
+            border-radius: 0.5rem; /* Consistent rounded corners */
+            padding: 0.75rem 1rem;
+            border: 1px solid #d1d5db; /* Light border */
+            transition: all 0.2s ease-in-out;
+        }
+        input:focus, select:focus, button:focus {
+            outline: none;
+            border-color: #6366f1; /* Indigo focus ring */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        button {
+            background-color: #6366f1; /* Indigo button */
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        button:hover {
+            background-color: #4f46e5; /* Darker indigo on hover */
+        }
+        button:disabled {
+            background-color: #a7a7a7; /* Gray when disabled */
+            cursor: not-allowed;
+        }
+        .message {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            display: none; /* Hidden by default */
+        }
+        .message.success {
+            background-color: #d1fae5; /* Green light background */
+            color: #065f46; /* Dark green text */
+            border: 1px solid #34d399;
+        }
+        .message.error {
+            background-color: #fee2e2; /* Red light background */
+            color: #991b1b; /* Dark red text */
+            border: 1px solid #ef4444;
+        }
+        .message.info {
+            background-color: #e0f2fe; /* Blue light background */
+            color: #0369a1; /* Dark blue text */
+            border: 1px solid #38bdf8;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ffffff;
+            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        .loading-spinner.active {
+            display: block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        iframe {
+            width: 100%;
+            height: 600px; /* Fixed height for the iframe */
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background-color: #f9fafb;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">GitLab Pipeline Trigger</h1>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">GitLab Configuration</h2>
+            <div>
+                <label for="projectId" class="block text-sm font-medium text-gray-700 mb-1">GitLab Project ID:</label>
+                <input type="text" id="projectId" placeholder="e.g., 12345678" class="w-full">
+            </div>
+            <div>
+                <label for="accessToken" class="block text-sm font-medium text-gray-700 mb-1">Personal Access Token (PAT):</label>
+                <input type="password" id="accessToken" placeholder="Your GitLab PAT with 'api' scope" class="w-full">
+                <p class="text-xs text-red-500 mt-1">
+                    Warning: Storing PAT in client-side code is not secure for production.
+                </p>
+            </div>
+            <button id="loadBranchesBtn">
+                Load Branches
+                <div id="loadBranchesSpinner" class="loading-spinner"></div>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">Pipeline Control</h2>
+            <div>
+                <label for="branchSelect" class="block text-sm font-medium text-gray-700 mb-1">Select Branch:</label>
+                <select id="branchSelect" class="w-full" disabled>
+                    <option value="">-- Select a branch --</option>
+                </select>
+            </div>
+            <div>
+                <label for="mavenTags" class="block text-sm font-medium text-gray-700 mb-1">Maven Tags (comma-separated, optional):</label>
+                <input type="text" id="mavenTags" placeholder="e.g., tag1,tag2" class="w-full">
+            </div>
+            <button id="triggerPipelineBtn" disabled>
+                Trigger Pipeline
+                <div id="triggerPipelineSpinner" class="loading-spinner"></div>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">Pipeline Status</h2>
+            <div id="pipelineStatus" class="message info">
+                No pipeline triggered yet.
+            </div>
+            <div id="pipelineDetails" class="text-sm text-gray-600 space-y-1">
+                </div>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-xl font-semibold text-gray-700">Generated Artifacts</h2>
+            <iframe id="artifactsIframe" title="Generated Artifacts Preview" class="hidden"></iframe>
+            <div id="noArtifactsMessage" class="message info">
+                Artifacts will appear here after a successful build.
+            </div>
+        </div>
+
+        <div id="generalMessage" class="message hidden"></div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const projectIdInput = document.getElementById('projectId');
+        const accessTokenInput = document.getElementById('accessToken');
+        const loadBranchesBtn = document.getElementById('loadBranchesBtn');
+        const loadBranchesSpinner = document.getElementById('loadBranchesSpinner');
+        const branchSelect = document.getElementById('branchSelect');
+        const mavenTagsInput = document.getElementById('mavenTags');
+        const triggerPipelineBtn = document.getElementById('triggerPipelineBtn');
+        const triggerPipelineSpinner = document.getElementById('triggerPipelineSpinner');
+        const pipelineStatusDiv = document.getElementById('pipelineStatus');
+        const pipelineDetailsDiv = document.getElementById('pipelineDetails');
+        const artifactsIframe = document.getElementById('artifactsIframe');
+        const noArtifactsMessage = document.getElementById('noArtifactsMessage');
+        const generalMessageDiv = document.getElementById('generalMessage');
+
+        // GitLab API Base URL
+        const GITLAB_BASE_URL = 'https://gitlab.com/api/v4';
+
+        // State variables
+        let currentPipelineId = null;
+        let pipelinePollingInterval = null;
+
+        /**
+         * Displays a message to the user.
+         * @param {string} type - 'success', 'error', or 'info'.
+         * @param {string} message - The message text.
+         * @param {HTMLElement} targetDiv - The HTML element to display the message in.
+         */
+        function showMessage(type, message, targetDiv = generalMessageDiv) {
+            targetDiv.className = `message ${type}`;
+            targetDiv.textContent = message;
+            targetDiv.style.display = 'block';
+            // Hide after 5 seconds if it's the general message div
+            if (targetDiv === generalMessageDiv) {
+                setTimeout(() => {
+                    targetDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        /**
+         * Hides a message.
+         * @param {HTMLElement} targetDiv - The HTML element whose message to hide.
+         */
+        function hideMessage(targetDiv = generalMessageDiv) {
+            targetDiv.style.display = 'none';
+        }
+
+        /**
+         * Sets the loading state for a button and its spinner.
+         * @param {HTMLButtonElement} button - The button element.
+         * @param {HTMLElement} spinner - The spinner element.
+         * @param {boolean} isLoading - True to show loading, false to hide.
+         */
+        function setLoading(button, spinner, isLoading) {
+            button.disabled = isLoading;
+            if (isLoading) {
+                spinner.classList.add('active');
+            } else {
+                spinner.classList.remove('active');
+            }
+        }
+
+        /**
+         * Fetches branches from GitLab and populates the dropdown.
+         */
+        async function fetchBranches() {
+            const projectId = projectIdInput.value.trim();
+            const accessToken = accessTokenInput.value.trim();
+
+            if (!projectId || !accessToken) {
+                showMessage('error', 'Please enter Project ID and Access Token.', generalMessageDiv);
+                return;
+            }
+
+            setLoading(loadBranchesBtn, loadBranchesSpinner, true);
+            hideMessage(generalMessageDiv);
+            branchSelect.innerHTML = '<option value="">-- Loading branches --</option>';
+            branchSelect.disabled = true;
+            triggerPipelineBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${GITLAB_BASE_URL}/projects/${projectId}/repository/branches`, {
+                    headers: {
+                        'Private-Token': accessToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to fetch branches: ${response.status} ${response.statusText} - ${errorText}`);
+                }
+
+                const branches = await response.json();
+                branchSelect.innerHTML = '<option value="">-- Select a branch --</option>'; // Clear previous options
+                branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch.name;
+                    option.textContent = branch.name;
+                    branchSelect.appendChild(option);
+                });
+                branchSelect.disabled = false;
+                triggerPipelineBtn.disabled = false;
+                showMessage('success', `Successfully loaded ${branches.length} branches.`, generalMessageDiv);
+
+            } catch (error) {
+                console.error('Error fetching branches:', error);
+                showMessage('error', `Error loading branches: ${error.message}`, generalMessageDiv);
+                branchSelect.innerHTML = '<option value="">-- Failed to load branches --</option>';
+            } finally {
+                setLoading(loadBranchesBtn, loadBranchesSpinner, false);
+            }
+        }
+
+        /**
+         * Triggers a new pipeline for the selected branch.
+         */
+        async function triggerPipeline() {
+            const projectId = projectIdInput.value.trim();
+            const accessToken = accessTokenInput.value.trim();
+            const branch = branchSelect.value;
+            const mavenTags = mavenTagsInput.value.trim();
+
+            if (!projectId || !accessToken) {
+                showMessage('error', 'Please enter Project ID and Access Token.', generalMessageDiv);
+                return;
+            }
+            if (!branch) {
+                showMessage('error', 'Please select a branch.', generalMessageDiv);
+                return;
+            }
+
+            setLoading(triggerPipelineBtn, triggerPipelineSpinner, true);
+            hideMessage(generalMessageDiv);
+            pipelineDetailsDiv.innerHTML = '';
+            artifactsIframe.classList.add('hidden');
+            noArtifactsMessage.classList.remove('hidden');
+            pipelineStatusDiv.className = 'message info';
+            pipelineStatusDiv.textContent = 'Triggering pipeline...';
+
+            const variables = {};
+            if (mavenTags) {
+                // Assuming 'MAVEN_TAGS' is a CI/CD variable expected by your .gitlab-ci.yml
+                variables.MAVEN_TAGS = mavenTags;
+            }
+
+            try {
+                const response = await fetch(`${GITLAB_BASE_URL}/projects/${projectId}/pipelines`, {
+                    method: 'POST',
+                    headers: {
+                        'Private-Token': accessToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ref: branch,
+                        variables: Object.keys(variables).length > 0 ? variables : undefined // Only send if variables exist
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Failed to trigger pipeline: ${response.status} ${response.statusText} - ${errorText}`);
+                }
+
+                const pipeline = await response.json();
+                currentPipelineId = pipeline.id;
+                showMessage('success', `Pipeline #${currentPipelineId} triggered successfully!`, generalMessageDiv);
+                startPollingPipelineStatus(projectId, accessToken, currentPipelineId);
+
+            } catch (error) {
+                console.error('Error triggering pipeline:', error);
+                showMessage('error', `Error triggering pipeline: ${error.message}`, generalMessageDiv);
+                pipelineStatusDiv.className = 'message error';
+                pipelineStatusDiv.textContent = 'Failed to trigger pipeline.';
+            } finally {
+                setLoading(triggerPipelineBtn, triggerPipelineSpinner, false);
+            }
+        }
+
+        /**
+         * Starts polling for the pipeline status.
+         * @param {string} projectId - The GitLab project ID.
+         * @param {string} accessToken - The GitLab Personal Access Token.
+         * @param {number} pipelineId - The ID of the pipeline to poll.
+         */
+        function startPollingPipelineStatus(projectId, accessToken, pipelineId) {
+            // Clear any existing polling interval
+            if (pipelinePollingInterval) {
+                clearInterval(pipelinePollingInterval);
+            }
+
+            pipelinePollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${GITLAB_BASE_URL}/projects/${projectId}/pipelines/${pipelineId}`, {
+                        headers: {
+                            'Private-Token': accessToken,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Failed to fetch pipeline status: ${response.status} ${response.statusText} - ${errorText}`);
+                    }
+
+                    const pipeline = await response.json();
+                    updatePipelineStatusUI(pipeline);
+
+                    // Stop polling if pipeline is complete (success, failed, canceled)
+                    if (['success', 'failed', 'canceled', 'skipped'].includes(pipeline.status)) {
+                        clearInterval(pipelinePollingInterval);
+                        pipelinePollingInterval = null;
+                        if (pipeline.status === 'success') {
+                            showMessage('success', `Pipeline #${pipeline.id} completed successfully!`, pipelineStatusDiv);
+                            // Attempt to display artifacts if the build was successful
+                            displayArtifacts(projectId, pipeline.id);
+                        } else {
+                            showMessage('error', `Pipeline #${pipeline.id} ${pipeline.status}.`, pipelineStatusDiv);
+                        }
+                    }
+
+                } catch (error) {
+                    console.error('Error polling pipeline status:', error);
+                    showMessage('error', `Error polling status: ${error.message}`, pipelineStatusDiv);
+                    clearInterval(pipelinePollingInterval); // Stop polling on error
+                    pipelinePollingInterval = null;
+                }
+            }, 5000); // Poll every 5 seconds
+        }
+
+        /**
+         * Updates the UI with the current pipeline status.
+         * @param {object} pipeline - The pipeline object from GitLab API.
+         */
+        function updatePipelineStatusUI(pipeline) {
+            let statusClass = 'info';
+            if (pipeline.status === 'success') {
+                statusClass = 'success';
+            } else if (['failed', 'canceled', 'skipped'].includes(pipeline.status)) {
+                statusClass = 'error';
+            }
+
+            pipelineStatusDiv.className = `message ${statusClass}`;
+            pipelineStatusDiv.textContent = `Pipeline #${pipeline.id} Status: ${pipeline.status.toUpperCase()}`;
+
+            pipelineDetailsDiv.innerHTML = `
+                <p><strong>Branch:</strong> ${pipeline.ref}</p>
+                <p><strong>Commit:</strong> ${pipeline.sha.substring(0, 8)}</p>
+                <p><strong>Web URL:</strong> <a href="${pipeline.web_url}" target="_blank" class="text-blue-600 hover:underline">${pipeline.web_url}</a></p>
+                <p><strong>Created At:</strong> ${new Date(pipeline.created_at).toLocaleString()}</p>
+                ${pipeline.finished_at ? `<p><strong>Finished At:</strong> ${new Date(pipeline.finished_at).toLocaleString()}</p>` : ''}
+            `;
+        }
+
+        /**
+         * Attempts to display generated artifacts in an iframe.
+         *
+         * IMPORTANT: This is a conceptual implementation.
+         * Directly accessing GitLab pipeline artifacts from a browser is often
+         * blocked by CORS policies or requires specific GitLab Pages setup.
+         *
+         * For this to work in a real scenario:
+         * 1. Your GitLab CI/CD pipeline must publish the HTML/CSS/JS files
+         * to a publicly accessible web server (e.g., GitLab Pages, S3, Netlify).
+         * 2. The URL generated here should point to the root HTML file of your
+         * published artifacts for the specific pipeline or commit.
+         *
+         * Example GitLab Pages URL structure:
+         * https://<username>.gitlab.io/<project-path>/-/jobs/<job-id>/artifacts/public/index.html
+         * Or more simply:
+         * https://<groupname>.gitlab.io/<projectname>/<path-to-your-html-file>
+         *
+         * For demonstration, we'll use a placeholder URL.
+         * You would replace this with your actual artifact hosting URL.
+         *
+         * @param {string} projectId - The GitLab project ID.
+         * @param {number} pipelineId - The ID of the successful pipeline.
+         */
+        async function displayArtifacts(projectId, pipelineId) {
+            // In a real scenario, you would need to know the job ID that produces the artifacts
+            // and the path to the main HTML file within those artifacts.
+            // You might fetch jobs for this pipeline to find the relevant job ID.
+
+            // Placeholder for the artifact URL.
+            // REPLACE THIS WITH YOUR ACTUAL ARTIFACT HOSTING URL!
+            // E.g., if you use GitLab Pages, it might look like:
+            // const artifactBaseUrl = `https://your-gitlab-username.gitlab.io/your-project-path`;
+            // const artifactUrl = `${artifactBaseUrl}/path/to/your/index.html`; // Adjust path as needed
+
+            // For demonstration, we'll just show a generic placeholder or a dummy URL.
+            // In a real app, you'd fetch the job artifacts URL if available and accessible.
+            // GitLab's API for artifacts usually provides a ZIP download, not a direct HTML render link.
+            // Therefore, hosting them via GitLab Pages or similar is the standard approach.
+
+            // Example: If your pipeline publishes to GitLab Pages, and your project is
+            // 'my-group/my-project', and the artifact is 'build/index.html',
+            // the URL might be: `https://my-group.gitlab.io/my-project/build/index.html`
+            // You might need to dynamically construct this URL based on project/pipeline info.
+
+            // For this example, we'll simulate by showing a message and a placeholder iframe.
+            // If you have a known URL for your artifacts, you can set it directly.
+            const dummyArtifactUrl = `https://placehold.co/800x600/E0F2FE/0369A1?text=Artifacts+Placeholder%0A(Replace+with+your+actual+URL)`;
+
+            // You might need to fetch jobs from the pipeline to find the job that produced artifacts
+            // and then get its artifacts browse URL. This is complex due to CORS and direct file access.
+            // A more practical approach is to have the pipeline publish to a known web host.
+
+            // For now, let's just show the iframe with a placeholder.
+            artifactsIframe.src = dummyArtifactUrl;
+            artifactsIframe.classList.remove('hidden');
+            noArtifactsMessage.classList.add('hidden');
+            showMessage('info', 'Artifacts displayed below. Note: This is a placeholder URL. You need to configure your pipeline to publish artifacts to a web-accessible location and update the `displayArtifacts` function with the correct URL.', generalMessageDiv);
+        }
+
+
+        // Event Listeners
+        loadBranchesBtn.addEventListener('click', fetchBranches);
+        triggerPipelineBtn.addEventListener('click', triggerPipeline);
+
+        // Enable/disable trigger button based on branch selection
+        branchSelect.addEventListener('change', () => {
+            triggerPipelineBtn.disabled = !branchSelect.value;
+        });
+
+        // Initialize UI state
+        window.onload = () => {
+            branchSelect.disabled = true;
+            triggerPipelineBtn.disabled = true;
+            hideMessage(generalMessageDiv);
+            // Optionally, load config from localStorage if available (for demo convenience, not security)
+            const storedProjectId = localStorage.getItem('gitlabProjectId');
+            const storedAccessToken = localStorage.getItem('gitlabAccessToken');
+            if (storedProjectId) projectIdInput.value = storedProjectId;
+            if (storedAccessToken) accessTokenInput.value = storedAccessToken; // Not recommended for production
+        };
+
+        // Save config to localStorage on input change (for demo convenience)
+        projectIdInput.addEventListener('input', () => {
+            localStorage.setItem('gitlabProjectId', projectIdInput.value.trim());
+        });
+        accessTokenInput.addEventListener('input', () => {
+            localStorage.setItem('gitlabAccessToken', accessTokenInput.value.trim());
+        });
+    </script>
+</body>
+</html>
