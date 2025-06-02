@@ -1,8 +1,9 @@
+* def isDateTimeOrNull = function(x) { 
+    return x == null || karate.match(x, "^^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{7}$").pass; 
+  }
 * def schema = 
 """
 {
-  lastTransactionDate: '#? _ == null || _ matches "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{7}$"'
+  lastTransactionDate: '#? isDateTimeOrNull(_)'
 }
 """
-
-lastTransactionDate: '#? _ == null || _ matches "^\\\\d{4}-\\\\d{2}-\\\\d{2} \\\\d{2}:\\\\d{2}:\\\\d{2}\\\\.\\\\d{7}$"'
