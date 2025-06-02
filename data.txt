@@ -4,3 +4,5 @@
   lastTransactionDate: '#? _ == null || _ matches "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{7}$"'
 }
 """
+
+lastTransactionDate: '#? _ == null || _ matches "^\\\\d{4}-\\\\d{2}-\\\\d{2} \\\\d{2}:\\\\d{2}:\\\\d{2}\\\\.\\\\d{7}$"'
