@@ -1,9 +1,11 @@
-In addition to core responsibilities, consistently contributed to initiatives beyond the immediate functional scope, supporting talent development, knowledge sharing, and engineering culture across the organization.
+Technical Excellence: Deep expertise in designing and implementing scalable, enterprise-grade test automation frameworks across UI, API, and data layers.
 
-Actively mentored several candidates as part of the Q++ Mentoring Program, fostering technical growth and confidence in early-career professionals.
+Innovation: Strong focus on continuous improvement—delivered cutting-edge solutions like Spark-based data validation pipelines and AI-driven test code generation tools.
 
-Contributed to UBS Connections technical blogs, sharing practical insights and thought leadership in automation and quality engineering.
+Strategic Execution: Proven ability to align automation initiatives with business goals, reducing manual efforts, improving release quality, and accelerating delivery cycles.
 
-Participated in trainings and technical transformation programs, helping drive adoption of new tools and practices across teams.
+Cross-functional Collaboration: Successfully led automation enablement across geographically distributed teams, driving adoption through training, mentoring, and POCs.
 
-Delivered and scheduled knowledge-sharing sessions through Lunch & Learn and QA Engineering Guild, encouraging cross-functional learning and collaboration.
+Ownership & Accountability: Known for end-to-end ownership of critical automation initiatives, consistently delivering high-impact solutions with measurable outcomes.
+
+Thought Leadership: Actively contributed to organization-wide transformation through technical blogs, mentoring programs, and guild/community engagements.
