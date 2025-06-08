@@ -1,11 +1,9 @@
-Led cross-functional automation trainings across geographies (India, US, Australia), ensuring seamless collaboration and consistent delivery.
+In addition to core responsibilities, consistently contributed to initiatives beyond the immediate functional scope, supporting talent development, knowledge sharing, and engineering culture across the organization.
 
-Managed onboarding, mentoring, and upskilling initiatives, enabling fellow team members and non-technical staff to contribute effectively to automation efforts.
+Actively mentored several candidates as part of the Q++ Mentoring Program, fostering technical growth and confidence in early-career professionals.
 
-Acted as SME in end-to-end test automation, driving framework design, implementation, and strategic rollout across multiple product teams.
+Contributed to UBS Connections technical blogs, sharing practical insights and thought leadership in automation and quality engineering.
 
-Coordinated with stakeholders, product owners, and developers to align QA goals with broader delivery objectives.
+Participated in trainings and technical transformation programs, helping drive adoption of new tools and practices across teams.
 
-Successfully led Proof of Concepts (POCs) for new product automation, enabling smooth adoption with minimal ramp-up time.
-
-Fostered a collaborative, high-performance culture through knowledge sharing, structured training programs, and continuous support.
+Delivered and scheduled knowledge-sharing sessions through Lunch & Learn and QA Engineering Guild, encouraging cross-functional learning and collaboration.
