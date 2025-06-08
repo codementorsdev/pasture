@@ -1,5 +1,11 @@
-Consistently contributed to organizational financial goals by driving automation-led efficiencies that reduced manual testing efforts and optimized resource utilization. Developed scalable, reusable test automation frameworks across UI, API, and database layers, enabling faster test cycles and reduced defect leakage—directly lowering the cost of quality.
+Led cross-functional automation trainings across geographies (India, US, Australia), ensuring seamless collaboration and consistent delivery.
 
-By replacing repetitive manual validation with intelligent automation, teams achieved higher throughput without additional headcount, delivering more with less. Key solutions such as the Apache Spark-based data validation pipeline and the end-to-end orchestration platform significantly reduced time and effort across data-intensive testing processes.
+Managed onboarding, mentoring, and upskilling initiatives, enabling fellow team members and non-technical staff to contribute effectively to automation efforts.
 
-These initiatives improved return on investment (ROI) by accelerating release timelines, increasing test coverage, and enabling teams to focus on higher-value activities—aligning directly with the organization’s cost-efficiency and productivity objectives.
+Acted as SME in end-to-end test automation, driving framework design, implementation, and strategic rollout across multiple product teams.
+
+Coordinated with stakeholders, product owners, and developers to align QA goals with broader delivery objectives.
+
+Successfully led Proof of Concepts (POCs) for new product automation, enabling smooth adoption with minimal ramp-up time.
+
+Fostered a collaborative, high-performance culture through knowledge sharing, structured training programs, and continuous support.
